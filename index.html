@@ -86,7 +86,6 @@ h1{margin:6px 0 18px; font-size:20px; text-align:center;}
 </div>
 
 <script>
-// 교시 및 멘트 정의
 const schedule={
   "1":{name:"1교시 국어",start:"08:25",end:"10:00"},
   "2":{name:"2교시 수학",start:"10:20",end:"12:10"},
@@ -103,43 +102,80 @@ const lessonMent={
   "4s":{regular:["제 4교시 탐구 영역 중 사회탐구 영역 예비령입니다. 감독관께서는 답안지를 책상 오른쪽에 배부해 주시되 결시자 책상 위에도 놓아 주십시오. 수험생은 4교시 사회탐구영역 답안지인지 확인하십시오.","제 4교시 사회탐구 영역 준비령입니다. 수험생은 두 손을 책상 아래로 내리고 조용히 기다립니다. 감독관께서는 문제지를 책상 왼쪽에 배부해주시되 결시자 책상 위에도 놓아 주십시오. 수험생은 표지를 제외한 문제지 면수가 6면인지와 각 면의 인쇄상태를 확인한 다음 문제지에 성명과 수험번호를 기재하여 주십시오. 표지의 필적확인문구를 답안지에 필적확인란에 정자체로 기재하십시오.","제 4교시 사회탐구 영역 본령입니다."],warn:"제 4교시 탐구 영역 중 사회탐구 영역 종료 5분전입니다.",end:"제 4교시 탐구 영역 중 사회탐구 영역 종료령입니다. 수험생은 필기도구를 놓고 답안지는 엎어서 오른쪽에, 문제지는 표지를 덮어서 왼쪽에 놓고 조용히 기다립니다."},
   "4c":{regular:["제 4교시 탐구 영역 중 과학탐구 영역 예비령입니다. 감독관께서는 답안지를 책상 오른쪽에 배부해 주시되 결시자 책상 위에도 놓아 주십시오. 수험생은 4교시 과학탐구영역 답안지인지 확인하십시오.","제 4교시 과학탐구 영역 준비령입니다. 수험생은 두 손을 책상 아래로 내리고 조용히 기다립니다. 감독관께서는 문제지를 책상 왼쪽에 배부해주시되 결시자 책상 위에도 놓아 주십시오. 수험생은 표지를 제외한 문제지 면수가 6면인지와 각 면의 인쇄상태를 확인한 다음 문제지에 성명과 수험번호를 기재하여 주십시오. 표지의 필적확인문구를 답안지에 필적확인란에 정자체로 기재하십시오.","제 4교시 과학탐구 영역 본령입니다."],warn:"제 4교시 탐구 영역 중 과학탐구 영역 종료 5분전입니다.",end:"제 4교시 탐구 영역 종료령입니다. 수험생은 필기도구를 놓고 답안지는 엎어서 오른쪽에, 문제지는 표지를 덮어서 왼쪽에 놓고 조용히 기다립니다."}
 };
-// 공용 음악
+
+// Audio
 let startAudio, after5Audio, after10Audio, endAudio;
 
-let selected=[],currentLessonIndex=0,currentTime=null,timerId=null,firedEvents={},paused=false;
-const hourEl=document.getElementById('hour'),minuteEl=document.getElementById('minute'),secondEl=document.getElementById('second');
-const currentTimeEl=document.getElementById('currentTime'),currentLessonEl=document.getElementById('currentLesson');
-const progressBar=document.getElementById('progress-bar'),lessonStartLabel=document.getElementById('lesson-start-label'),lessonEndLabel=document.getElementById('lesson-end-label');
-const setupEl=document.getElementById('setup'),clockPageEl=document.getElementById('clockPage');
+let selected=[], currentLessonIndex=0, currentTime=null, timerId=null, paused=false, progressInterval=null;
+let scheduledTimeouts=[];
 
-function parseTimeHM(hm){const[h,m]=hm.split(':').map(Number);return{h,m}}
-function makeDate(h,m){const d=new Date(); d.setHours(h,m,0,0); return d;}
+const hourEl=document.getElementById('hour'),
+      minuteEl=document.getElementById('minute'),
+      secondEl=document.getElementById('second'),
+      currentTimeEl=document.getElementById('currentTime'),
+      currentLessonEl=document.getElementById('currentLesson'),
+      progressBar=document.getElementById('progress-bar'),
+      lessonStartLabel=document.getElementById('lesson-start-label'),
+      lessonEndLabel=document.getElementById('lesson-end-label'),
+      setupEl=document.getElementById('setup'),
+      clockPageEl=document.getElementById('clockPage');
+
+function parseTimeHM(hm){const[h,m]=hm.split(':').map(Number); return {h,m};}
+function makeDate(h,m){const d=new Date(); d.setHours(h,m,0,0); d.setMilliseconds(0); return d;}
 
 function startClock(){
   selected=Array.from(document.querySelectorAll('#setup input[type=checkbox]:checked')).map(i=>i.value);
   if(selected.length===0) return alert("교시를 선택해주세요.");
   setupEl.style.display="none"; clockPageEl.style.display="block";
-  currentLessonIndex=0; firedEvents={};
-  
-  // Audio 객체 생성 (브라우저 정책 문제 방지)
-  startAudio = new Audio('music/start.mp3');
-  after5Audio = new Audio('music/after5.mp3');
-  after10Audio = new Audio('music/after10.mp3');
-  endAudio = new Audio('music/end.mp3');
+  currentLessonIndex=0;
+
+  // Audio 생성
+  startAudio=new Audio('music/start.mp3');
+  after5Audio=new Audio('music/after5.mp3');
+  after10Audio=new Audio('music/after10.mp3');
+  endAudio=new Audio('music/end.mp3');
 
   startLesson(selected[currentLessonIndex]);
-  startTimer();
+  timerId=setInterval(tick,1000);
+  progressInterval=setInterval(updateProgress,1000);
 }
 
 function startLesson(key){
+  clearScheduled(); // 이전 이벤트 초기화
   const s=parseTimeHM(schedule[key].start);
   currentTime=makeDate(s.h,s.m);
   currentLessonEl.textContent=schedule[key].name;
   lessonStartLabel.textContent=schedule[key].start;
   lessonEndLabel.textContent=schedule[key].end;
-  firedEvents[currentLessonIndex]={};
+
+  scheduleEvents(key);
 }
 
+function scheduleEvents(key){
+  const startDate = makeDate(...Object.values(parseTimeHM(schedule[key].start)));
+  const now = new Date();
+  const events=[
+    {time:0,audio:startAudio,tts:lessonMent[key].regular[0]},
+    {time:300000,audio:after5Audio,tts:lessonMent[key].regular[1]},
+    {time:600000,audio:after10Audio,tts:lessonMent[key].regular[2]},
+  ];
+  const endDate=makeDate(...Object.values(parseTimeHM(schedule[key].end)));
+  events.push({time:endDate-now,audio:endAudio,tts:lessonMent[key].end});
+
+  events.forEach(ev=>{
+    const delay = ev.time;
+    if(delay>0){
+      const to=setTimeout(()=>{
+        if(!paused){ playAudio(ev.audio); speak(ev.tts); }
+      }, delay);
+      scheduledTimeouts.push(to);
+    }
+  });
+}
+
+function clearScheduled(){ scheduledTimeouts.forEach(t=>clearTimeout(t)); scheduledTimeouts=[];}
+
+function tick(){ if(!paused){ currentTime.setSeconds(currentTime.getSeconds()+1); updateClock(); } }
 function updateClock(){
   const h=currentTime.getHours(), m=currentTime.getMinutes(), s=currentTime.getSeconds();
   currentTimeEl.textContent=`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
@@ -147,35 +183,7 @@ function updateClock(){
   minuteEl.style.transform=`translateX(-50%) rotate(${6*m}deg)`;
   secondEl.style.transform=`translateX(-50%) rotate(${6*s}deg)`;
 }
-
-function handleTime(){
-  if(currentLessonIndex>=selected.length) return;
+function updateProgress(){
   const key=selected[currentLessonIndex];
-  const start=parseTimeHM(schedule[key].start), end=parseTimeHM(schedule[key].end);
-  const startDate=makeDate(start.h,start.m), endDate=makeDate(end.h,end.m);
-  const diff=(currentTime-startDate)/1000, total=(endDate-startDate)/1000;
-
-  // 시작,5분,10분 이벤트
-  const times=[0,300,600];
-  times.forEach((t,i)=>{
-    if(diff>=t && !firedEvents[currentLessonIndex]?.[i]){
-      firedEvents[currentLessonIndex]={...firedEvents[currentLessonIndex],[i]:true};
-      let audio=null;
-      if(i===0) audio=startAudio;
-      else if(i===1) audio=after5Audio;
-      else audio=after10Audio;
-      playAudio(audio);
-      setTimeout(()=>speak(lessonMent[key].regular[i]||""),500);
-    }
-  });
-
-  // 종료 전 경고
-  const warnOffset=(key.startsWith("4")?300:600);
-  if(total-diff<=warnOffset && !firedEvents[currentLessonIndex]?.warn){
-    firedEvents[currentLessonIndex]={...firedEvents[currentLessonIndex],warn:true};
-    speak(lessonMent[key].warn);
-  }
-
-  // 종료
-  if(diff>=total && !firedEvents[currentLessonIndex]?.end){
-    firedEvents[currentLessonIndex]={...fired
+  if(!key) return;
+  const start

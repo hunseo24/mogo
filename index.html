@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>아날로그 시계 타임테이블 (종료음악 포함)</title>
+<style>
+  :root{
+    --bg:#f0f4f8;
+    --accent:#1c2a4a;
+    --card:#fff;
+    --muted:#6b7280;
+  }
+  body{
+    font-family: "Noto Sans KR", "맑은 고딕", sans-serif;
+    background: var(--bg);
+    color: #0b1220;
+    margin: 0;
+    padding: 24px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+    box-sizing:border-box;
+  }
+  .container { width:100%; max-width:920px; }
+  h1{ margin: 6px 0 18px; font-size:20px; text-align:center; }
+
+  .card{
+    background:var(--card);
+    padding:18px;
+    border-radius:12px;
+    box-shadow: 0 6px 18px rgba(12,20,40,0.06);
+    margin-bottom:18px;
+  }
+  #setup label{ display:block; margin:8px 0; cursor:pointer; font-size:15px; }
+  .btn { background:var(--accent); color:#fff; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:15px; }
+  .btn:active{ transform:translateY(1px); }
+
+  .clock-wrap{ display:flex; gap:24px; align-items:center; justify-content:center; flex-wrap:wrap; padding:18px; }
+  .clock {
+    position: relative;
+    width: 300px; height: 300px;
+    border-radius:50%;
+    background: linear-gradient(180deg,#fff,#f7fafc);
+    border: 10px solid var(--accent);
+    box-shadow: 0 8px 22px rgba(15,23,42,0.08);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hand {
+    position:absolute; bottom:50%; left:50%;
+    transform-origin: bottom;
+    transform: translateX(-50%) rotate(0deg);
+    background: var(--accent);
+    border-radius:4px;
+  }
+  .hour{ width:8px; height:75px; z-index:3; }
+  .minute{ width:6px; height:100px; z-index:2; }
+  .second{ width:3px; height:120px; background:#e11d48; z-index:1; }
+  .center-dot{ position:absolute; width:14px; height:14px; background:var(--accent); border-radius:50%; z-index:5; }
+
+  .controls{ text-align:center; margin-top:12px; }
+  .progress-wrap{ width:100%; max-width:560px; margin: 8px auto 0; }
+  .progress-labels{ display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  .progress{ height:12px; background:#e6eef7; border-radius:999px; overflow:hidden; }
+  .progress > .bar{ height:100%; width:0%; background: linear-gradient(90deg,#3b82f6,#06b6d4); transition:width 0.3s linear; }
+
+  @media (max-width:640px){
+    .clock{ width:230px; height:230px; }
+    .hour{ height:58px; } .minute{ height:78px; } .second{ height:90px; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>아날로그 시계 타임테이블</h1>
+
+    <div id="setup" class="card">
+      <h3>교시 선택</h3>
+      <label><input type="checkbox" value="1"> 1교시 국어 (08:25~10:00)</label>
+      <label><input type="checkbox" value="2"> 2교시 수학 (10:20~12:10)</label>
+      <label><input type="checkbox" value="3"> 3교시 영어 (13:00~14:20)</label>
+      <label><input type="checkbox" value="4k"> 4교시 한국사 (14:40~15:20)</label>
+      <label><input type="checkbox" value="4s"> 4교시 사회탐구 (15:25~16:15)</label>
+      <label><input type="checkbox" value="4c"> 4교시 과학탐구 (16:20~17:10)</label>
+      <div style="margin-top:12px;">
+        <button class="btn" onclick="startClock()">시작</button>
+      </div>
+    </div>
+
+    <div id="clockPage" class="card" style="display:none;">
+      <div class="clock-wrap">
+        <div class="clock">
+          <div class="hand hour" id="hour"></div>
+          <div class="hand minute" id="minute"></div>
+          <div class="hand second" id="second"></div>
+          <div class="center-dot"></div>
+        </div>
+
+        <div style="min-width:220px;">
+          <div style="font-size:16px; font-weight:700;" id="currentLesson">--</div>
+          <div style="color:var(--muted); margin-top:6px;" id="currentTime">--:--:--</div>
+
+          <div class="controls">
+            <button class="btn" onclick="rewindTime()">⏪ 30초 뒤로</button>
+            <button class="btn" onclick="advanceTime()">⏩ 30초 앞으로</button>
+          </div>
+          <div style="margin-top:10px; text-align:center;">
+            <button style="background:#ef4444;" class="btn" onclick="stopAll()">중지</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-labels">
+          <div id="lesson-start-label">시작</div>
+          <div id="lesson-end-label">종료</div>
+        </div>
+        <div class="progress">
+          <div class="bar" id="progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="mainMusic" src="music/main.mp3" preload="auto"></audio>
+  <audio id="endMusic" src="music/end.mp3" preload="auto"></audio>
+
+<script>
+const schedule = {
+  "1": { name: "1교시 국어", start: "08:25", end: "10:00" },
+  "2": { name: "2교시 수학", start: "10:20", end: "12:10" },
+  "3": { name: "3교시 영어", start: "13:00", end: "14:20" },
+  "4k": { name: "4교시 한국사", start: "14:40", end: "15:20" },
+  "4s": { name: "4교시 사회탐구", start: "15:25", end: "16:15" },
+  "4c": { name: "4교시 과학탐구", start: "16:20", end: "17:10" }
+};
+
+const lessonMent = {
+  "1": {
+    regular: ["국어 수업 시작","10분 지남","15분 지남"],
+    warn: "국어 수업 종료 10분 전입니다.",
+    end: "국어 수업이 종료되었습니다."
+  },
+  "2": {
+    regular: ["수학 수업 시작","5분 지남","10분 지남"],
+    warn: "수학 수업 종료 10분 전입니다.",
+    end: "수학 수업이 종료되었습니다."
+  },
+  "3": {
+    regular: ["영어 수업 시작","5분 지남","10분 지남"],
+    warn: "영어 수업 종료 10분 전입니다.",
+    end: "영어 수업이 종료되었습니다."
+  },
+  "4k": {
+    regular: ["한국사 수업 시작","5분 지남","10분 지남"],
+    warn: "한국사 수업 종료 5분 전입니다.",
+    end: "한국사 수업이 종료되었습니다."
+  },
+  "4s": {
+    regular: ["사회탐구 수업 시작","5분 지남","10분 지남"],
+    warn: "사회탐구 수업 종료 5분 전입니다.",
+    end: "사회탐구 수업이 종료되었습니다."
+  },
+  "4c": {
+    regular: ["과학탐구 수업 시작","5분 지남","10분 지남"],
+    warn: "과학탐구 수업 종료 5분 전입니다.",
+    end: "과학탐구 수업이 종료되었습니다."
+  }
+};
+
+let selected=[],currentLessonIndex=0,currentTime=null,timerId=null,firedEvents={};
+const hourEl=document.getElementById('hour'),minuteEl=document.getElementById('minute'),secondEl=document.getElementById('second');
+const currentTimeEl=document.getElementById('currentTime'),currentLessonEl=document.getElementById('currentLesson');
+const progressBar=document.getElementById('progress-bar'),lessonStartLabel=document.getElementById('lesson-start

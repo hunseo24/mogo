@@ -40,6 +40,7 @@
     <audio id="audio-chime1" src="sounds/chime1.mp3" preload="auto"></audio>
     <audio id="audio-chime2" src="sounds/chime2.mp3" preload="auto"></audio>
     <audio id="audio-beep1" src="sounds/beep1.mp3" preload="auto"></audio>
+    <audio id="audio-beep1" src="sounds/beep2.mp3" preload="auto"></audio>
     
     <!-- 영어 듣기평가용 오디오 플레이어 -->
     <audio id="listening-audio" preload="auto"></audio>
@@ -223,10 +224,10 @@
                 pre_10_music: 'audio-chime1',
                 pre_10_tts: '시험 10분 전입니다. 수험생은 입실하십시오.',
                 
-                pre_5_music: 'audio-chime1',
+                pre_5_music: 'audio-chime2',
                 pre_5_tts: '시험 5분 전입니다. 문제지를 확인하십시오.',
                 
-                start_music: 'audio-chime2',
+                start_music: 'audio-beep1',
                 start_tts: '시험이 시작되었습니다.',
                 
                 end_10_music: 'none',
@@ -235,7 +236,7 @@
                 end_5_music: 'none',
                 end_5_tts: '시험 종료 5분 전입니다.',
                 
-                end_music: 'audio-chime2',
+                end_music: 'audio-beep2',
                 end_tts: '시험이 종료되었습니다. 필기도구를 놓고 답안지를 제출하십시오.'
             };
 

@@ -40,7 +40,7 @@
     <audio id="audio-chime1" src="sounds/chime1.mp3" preload="auto"></audio>
     <audio id="audio-chime2" src="sounds/chime2.mp3" preload="auto"></audio>
     <audio id="audio-beep1" src="sounds/beep1.mp3" preload="auto"></audio>
-    <audio id="audio-beep1" src="sounds/beep2.mp3" preload="auto"></audio>
+    <audio id="audio-beep2" src="sounds/beep2.mp3" preload="auto"></audio>
     
     <!-- 영어 듣기평가용 오디오 플레이어 -->
     <audio id="listening-audio" preload="auto"></audio>
@@ -333,8 +333,8 @@
             const playEventSound = (musicKey, ttsText) => {
                 if (musicKey !== 'none') {
                     playSound(musicKey);
-                    // 소리 재생 후 2초 뒤 TTS
-                    setTimeout(() => speakTTS(ttsText), 2000); 
+                    // 소리 재생 후 8초 뒤 TTS
+                    setTimeout(() => speakTTS(ttsText), 8000); 
                 } else {
                     speakTTS(ttsText); // 소리 없으면 바로 TTS
                 }

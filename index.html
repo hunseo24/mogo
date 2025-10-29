@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수능 모의고사 타이머</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Sans KR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Noto Sans KR 폰트 적용 */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            overscroll-behavior: none;
+        }
+        /* 시계 바늘 트랜지션 효과 */
+        .clock-hand {
+            transition: transform 0.5s cubic-bezier(0.4, 2.3, 0.6, 1);
+        }
+        /* 스크롤바 숨기기 */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        /* Firefox */
+        .scrollbar-hide {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
+
+    <!-- ========================================= -->
+    <!--          오디오 파일 (숨김)              -->
+    <!-- ========================================= -->
+    <!-- 효과음: 'sounds/' 폴더 안에 파일을 위치시키세요 -->
+    <audio id="audio-chime1" src="sounds/chime1.mp3" preload="auto"></audio>
+    <audio id="audio-chime2" src="sounds/chime2.mp3" preload="auto"></audio>
+    <audio id="audio-beep1" src="sounds/beep1.mp3" preload="auto"></audio>
+    
+    <!-- 영어 듣기평가용 오디오 플레이어 -->
+    <audio id="listening-audio" preload="auto"></audio>
+
+    <!-- ========================================= -->
+    <!--          설정 페이지 (Page 1)           -->
+    <!-- ========================================= -->
+    <div id="settings-page" class="w-full max-w-lg">
+        <div class="bg-gray-800 p-6 md:p-8 rounded-2xl shadow-2xl">
+            <h1 class="text-3xl font-bold text-center mb-6 text-blue-300">모의고사 타이머 설정</h1>
+
+            <!-- 개정 교육과정 선택 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-3">1. 시험 유형 선택</h2>
+                <div class="flex space-x-4">
+                    <label class="flex-1 bg-gray-700 p-4 rounded-lg text-center cursor-pointer has-[:checked]:bg-blue-600 has-[:checked]:ring-2 ring-blue-400">
+                        <input type="radio" name="examType" value="15" class="sr-only" checked>
+                        <span>'15 개정 수능</span>
+                    </label>
+                    <label class="flex-1 bg-gray-700 p-4 rounded-lg text-center cursor-pointer has-[:checked]:bg-blue-600 has-[:checked]:ring-2 ring-blue-400">
+                        <input type="radio" name="examType" value="22" class="sr-only">
+                        <span>'22 개정 수능</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 과목 선택 -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-3">2. 응시 과목 선택</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- 과목 체크박스 -->
+                    <label class="flex items-center bg-gray-700 p-3 rounded-lg cursor-pointer has-[:checked]:bg-gray-600">
+                        <input type="checkbox" id="subject-korean" value="korean" class="subject-checkbox h-5 w-5 rounded text-blue-500 bg-gray-800 border-gray-600 focus:ring-blue-600">
+                        <span class="ml-3 text-lg">1교시 국어</span>
+                    </label>
+                    <label class="flex items-center bg-gray-700 p-3 rounded-lg cursor-pointer has-[:checked]:bg-gray-600">
+                        <input type="checkbox" id="subject-math" value="math" class="subject-checkbox h-5 w-5 rounded text-blue-500 bg-gray-800 border-gray-600 focus:ring-blue-600">
+                        <span class="ml-3 text-lg">2교시 수학</span>
+                    </label>
+                    <label class="flex items-center bg-gray-700 p-3 rounded-lg cursor-pointer has-[:checked]:bg-gray-600">
+                        <input type="checkbox" id="subject-english" value="english" class="subject-checkbox h-5 w-5 rounded text-blue-500 bg-gray-800 border-gray-600 focus:ring-blue-600">
+                        <span class="ml-3 text-lg">3교시 영어</span>
+                    </label>
+                    <label class="flex items-center bg-gray-700 p-3 rounded-lg cursor-pointer has-[:checked]:bg-gray-600">
+                        <input type="checkbox" id="subject-history" value="history" class="subject-checkbox h-5 w-5 rounded text-blue-500 bg-gray-800 border-gray-600 focus:ring-blue-600">
+                        <span class="ml-3 text-lg">4교시 한국사</span>
+                    </label>
+                    <label class="flex items-center bg-gray-700 p-3 rounded-lg cursor-pointer has-[:checked]:bg-gray-600">
+                        <input type="checkbox" id="subject-social" value="social" class="subject-checkbox h-5 w-5 rounded text-blue-500 bg-gray-800 border-gray-600 focus:ring-blue-600">
+                        <span class="ml-3 text-lg">4교시 사회탐구</span>
+                    </label>
+                    <label class="flex items-center bg-gray-700 p-3 rounded-lg cursor-pointer has-[:checked]:bg-gray-600">
+                        <input type="checkbox" id="subject-science" value="science" class="subject-checkbox h-5 w-5 rounded text-blue-500 bg-gray-800 border-gray-600 focus:ring-blue-600">
+                        <span class="ml-3 text-lg">4교시 과학탐구</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 시작 버튼 -->
+            <button id="start-button" class="w-full py-3 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-lg font-bold transition-colors">
+                타이머 시작
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!--          타이머 페이지 (Page 2)           -->
+    <!-- ========================================= -->
+    <div id="timer-page" class="w-full h-screen flex flex-col items-center justify-between p-4 hidden">
+        <!-- 상단 정보 -->
+        <div class="w-full max-w-4xl text-center">
+            <div class="flex justify-between items-center mb-2">
+                <button id="back-button" class="py-2 px-4 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">&larr; 설정으로</button>
+                <div id="subject-info" class="text-2xl md:text-3xl font-bold text-blue-300">1교시 국어</div>
+                <div id="time-remaining" class="text-xl md:text-2xl font-semibold text-gray-300 w-32 text-right">00:00:00</div>
+            </div>
+            <div id="event-info" class="text-xl md:text-2xl text-yellow-400 h-8">시험 12분 전 (준비)</div>
+        </div>
+
+        <!-- 아날로그 시계 -->
+        <div class="relative w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] my-4">
+            <canvas id="analog-clock" class="w-full h-full"></canvas>
+            <!-- 영어 듣기평가 알림 -->
+            <div id="english-listening-overlay" class="absolute inset-0 bg-black bg-opacity-70 rounded-full flex-col items-center justify-center text-center p-8 hidden">
+                <div class="text-2xl md:text-3xl font-bold text-red-400 animate-pulse">듣기평가 진행 중</div>
+                <div class="text-lg md:text-xl mt-4">듣기평가가 끝날 때까지<br>시간을 이동할 수 없습니다.</div>
+                <div id="english-file-display" class="text-lg md:text-xl mt-2"></div>
+            </div>
+        </div>
+
+        <!-- 디지털 시계 -->
+        <div id="digital-clock" class="text-5xl md:text-7xl font-bold mb-4">08:28:00</div>
+
+        <!-- 제어 버튼 -->
+        <div class="w-full max-w-4xl flex flex-col items-center">
+            <!-- 영어 듣기 음원 설정 (영어 과목 시에만 보임) -->
+            <div id="english-config" class="mb-4 p-4 bg-gray-800 rounded-lg flex items-center space-x-3 hidden">
+                <label for="english-audio-input" class="text-lg">듣기평가 음원:</label>
+                <input type="text" id="english-audio-input" class="w-64 bg-gray-700 border border-gray-600 rounded-md px-3 py-1 text-lg" placeholder="e.g., audio/2024_listening.mp3" value="audio/2024_listening.mp3">
+            </div>
+            
+            <!-- 시간 이동 버튼 -->
+            <div class="flex justify-center flex-wrap gap-2 md:gap-4 mb-4">
+                <button data-skip="-300" class="time-skip-btn w-20 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">-5분</button>
+                <button data-skip="-30" class="time-skip-btn w-20 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">-30초</button>
+                <button data-skip="30" class="time-skip-btn w-20 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">+30초</button>
+                <button data-skip="300" class="time-skip-btn w-20 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">+5분</button>
+            </div>
+            
+            <!-- 메인 제어 버튼 -->
+            <div class="flex justify-center flex-wrap gap-2 md:gap-4">
+                <button id="pause-button" class="w-32 py-3 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-lg font-bold transition-colors">일시정지</button>
+                <button id="event-skip-button" class="w-32 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-lg font-bold transition-colors">다음 종 이동</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!--           커스텀 메시지 박스             -->
+    <!-- ========================================= -->
+    <div id="message-box" class="fixed top-5 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg hidden opacity-0 transition-opacity duration-300">
+        <span id="message-text"></span>
+    </div>
+
+
+    <!-- ========================================= -->
+    <!--          JavaScript 로직              -->
+    <!-- ========================================= -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- DOM 요소 ---
+            const settingsPage = document.getElementById('settings-page');
+            const timerPage = document.getElementById('timer-page');
+            const startButton = document.getElementById('start-button');
+            const backButton = document.getElementById('back-button');
+            
+            // 타이머 페이지 요소
+            const subjectInfo = document.getElementById('subject-info');
+            const eventInfo = document.getElementById('event-info');
+            const timeRemainingEl = document.getElementById('time-remaining');
+            const digitalClock = document.getElementById('digital-clock');
+            const canvas = document.getElementById('analog-clock');
+            const ctx = canvas.getContext('2d');
+            const pauseButton = document.getElementById('pause-button');
+            const eventSkipButton = document.getElementById('event-skip-button');
+            const englishConfig = document.getElementById('english-config');
+            const englishAudioInput = document.getElementById('english-audio-input');
+            const englishFileDisplay = document.getElementById('english-file-display');
+            const englishListeningOverlay = document.getElementById('english-listening-overlay');
+
+            // 메시지 박스
+            const messageBox = document.getElementById('message-box');
+            const messageText = document.getElementById('message-text');
+
+            // 오디오 요소
+            const listeningAudio = document.getElementById('listening-audio');
+
+            // --- TTS (Web Speech API) ---
+            const tts = window.speechSynthesis;
+            let currentUtterance = null;
+
+            // --- 상태 변수 ---
+            let selectedExamType = '15';
+            let selectedSubjects = []; // ['korean', 'math', ...]
+            let currentSubjectIndex = 0;
+            let currentSubjectKey = '';
+            let currentSubject; // 현재 과목의 상세 정보
+            
+            let simulationTime = new Date(); // 시뮬레이션 되는 현재 시간
+            let timerInterval = null;
+            let timerStatus = 'stopped'; // stopped, running, paused
+            
+            let eventsTriggered = {}; // 실행된 이벤트를 기록
+            let isListeningTestActive = false;
+            let listeningTestEndTime = null;
+
+            // --- 설정값 (멘트 수정은 여기에서!) ---
+            const userConfig = {
+                // 'audio-chime1', 'audio-chime2', 'audio-beep1', 'none' 중 선택
+                pre_10_music: 'audio-chime1',
+                pre_10_tts: '시험 10분 전입니다. 수험생은 입실하십시오.',
+                
+                pre_5_music: 'audio-chime1',
+                pre_5_tts: '시험 5분 전입니다. 문제지를 확인하십시오.',
+                
+                start_music: 'audio-chime2',
+                start_tts: '시험이 시작되었습니다.',
+                
+                end_10_music: 'none',
+                end_10_tts: '시험 종료 10분 전입니다.',
+                
+                end_5_music: 'none',
+                end_5_tts: '시험 종료 5분 전입니다.',
+                
+                end_music: 'audio-chime2',
+                end_tts: '시험이 종료되었습니다. 필기도구를 놓고 답안지를 제출하십시오.'
+            };
+
+            // 수능 시간표 (시:분)
+            const EXAM_SCHEDULE = {
+                '15': {
+                    korean:  { name: '1교시 국어',    start: '08:40', end: '10:00' },
+                    math:    { name: '2교시 수학',    start: '10:30', end: '12:10' },
+                    english: { name: '3교시 영어',    start: '13:10', end: '14:20', listeningDuration: 25 }, // 듣기 13:10 ~ 약 13:35 (25분)
+                    history: { name: '4교시 한국사',  start: '14:50', end: '15:20' },
+                    social:  { name: '4교시 사탐',    start: '15:35', end: '16:37' }, // 15:35~16:05 (1), 16:07~16:37 (2)
+                    science: { name: '4교시 과탐',    start: '15:35', end: '16:37' },
+                },
+                '22': { // 22개정 (현재와 동일)
+                    korean:  { name: '1교시 국어',    start: '08:40', end: '10:00' },
+                    math:    { name: '2교시 수학',    start: '10:30', end: '12:10' },
+                    english: { name: '3교시 영어',    start: '13:10', end: '14:20', listeningDuration: 25 },
+                    history: { name: '4교시 한국사',  start: '14:50', end: '15:20' },
+                    social:  { name: '4교시 사탐',    start: '15:35', end: '16:37' },
+                    science: { name: '4교시 과탐',    start: '15:35', end: '16:37' },
+                }
+            };
+            
+            // --- 유틸리티 함수 ---
+            
+            // "HH:MM" -> 오늘 날짜의 Date 객체로
+            const timeToDate = (timeStr) => {
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                const now = new Date();
+                now.setHours(hours, minutes, 0, 0); // 시, 분, 0초, 0밀리초
+                return now;
+            };
+
+            // Date -> "HH:MM:SS"
+            const formatTime = (date) => {
+                return date.toTimeString().split(' ')[0];
+            };
+
+            // 초 -> "HH:MM:SS" (남은 시간용)
+            const formatDuration = (totalSeconds) => {
+                if (totalSeconds < 0) totalSeconds = 0;
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                return [hours, minutes, seconds].map(v => v.toString().padStart(2, '0')).join(':');
+            };
+
+            // 커스텀 메시지 박스
+            const showMessage = (msg) => {
+                messageText.textContent = msg;
+                messageBox.classList.remove('hidden', 'opacity-0');
+                setTimeout(() => {
+                    messageBox.classList.add('opacity-0');
+                    setTimeout(() => messageBox.classList.add('hidden'), 300);
+                }, 2000);
+            };
+
+            // --- 오디오/TTS 함수 ---
+            
+            const playSound = (soundId) => {
+                // 'none'이거나 ID가 없으면 재생 안 함
+                if (!soundId || soundId === 'none') return;
+
+                try {
+                    const audioElement = document.getElementById(soundId);
+                    if (audioElement) {
+                        audioElement.currentTime = 0; // 시작 지점으로 되감기
+                        audioElement.play().catch(e => console.error(`Error playing sound ${soundId}:`, e));
+                    } else {
+                        console.warn(`Audio element not found: ${soundId}`);
+                    }
+                } catch (e) {
+                    console.error(`Error with sound ${soundId}:`, e);
+                }
+            };
+
+            const speakTTS = (text) => {
+                stopTTS(); // 이전 멘트 중지
+                if (!text) return;
+                
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                currentUtterance.lang = 'ko-KR';
+                currentUtterance.rate = 1.0;
+                tts.speak(currentUtterance);
+            };
+
+            const stopTTS = () => {
+                if (tts.speaking) {
+                    tts.cancel();
+                }
+                currentUtterance = null;
+            };
+
+            const playEventSound = (musicKey, ttsText) => {
+                if (musicKey !== 'none') {
+                    playSound(musicKey);
+                    // 소리 재생 후 2초 뒤 TTS
+                    setTimeout(() => speakTTS(ttsText), 2000); 
+                } else {
+                    speakTTS(ttsText); // 소리 없으면 바로 TTS
+                }
+            };
+
+            // --- 아날로그 시계 그리기 ---
+            const setupCanvas = () => {
+                const size = canvas.parentElement.clientWidth;
+                canvas.width = size;
+                canvas.height = size;
+                drawClock(simulationTime); // 초기 시계 그리기
+            };
+            
+            const drawClock = (time) => {
+                const radius = canvas.width / 2;
+                ctx.save();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.translate(radius, radius);
+                
+                const faceRadius = radius * 0.95;
+
+                // 시계판
+                ctx.beginPath();
+                ctx.arc(0, 0, faceRadius, 0, 2 * Math.PI);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = radius * 0.05;
+                ctx.stroke();
+
+                // 시계 중심
+                ctx.beginPath();
+                ctx.arc(0, 0, radius * 0.05, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+
+                // 숫자
+                ctx.font = `${radius * 0.15}px 'Noto Sans KR', sans-serif`;
+                ctx.textBaseline = 'middle';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#333';
+                for (let num = 1; num <= 12; num++) {
+                    const ang = num * Math.PI / 6;
+                    ctx.rotate(ang);
+                    ctx.translate(0, -faceRadius * 0.8);
+                    ctx.rotate(-ang);
+                    ctx.fillText(num.toString(), 0, 0);
+                    ctx.rotate(ang);
+                    ctx.translate(0, faceRadius * 0.8);
+                    ctx.rotate(-ang);
+                }
+
+                // 눈금 (간소화)
+                for (let i = 0; i < 60; i++) {
+                    const ang = i * Math.PI / 30;
+                    ctx.beginPath();
+                    ctx.rotate(ang);
+                    ctx.moveTo(0, -faceRadius * 0.9);
+                    ctx.lineWidth = (i % 5 === 0) ? radius * 0.03 : radius * 0.01;
+                    ctx.lineTo(0, (i % 5 === 0) ? -faceRadius * 0.88 : -faceRadius * 0.9);
+                    ctx.strokeStyle = '#555';
+                    ctx.stroke();
+                    ctx.rotate(-ang);
+                }
+
+                // 시간
+                const hours = time.getHours() % 12;
+                const minutes = time.getMinutes();
+                const seconds = time.getSeconds();
+
+                // 시계 바늘
+                const hourAng = (hours * Math.PI / 6) + (minutes * Math.PI / (6 * 60)) + (seconds * Math.PI / (360 * 60));
+                drawHand(hourAng, faceRadius * 0.5, radius * 0.07, '#333');
+                
+                const minAng = (minutes * Math.PI / 30) + (seconds * Math.PI / (30 * 60));
+                drawHand(minAng, faceRadius * 0.75, radius * 0.05, '#333');
+                
+                const secAng = (seconds * Math.PI / 30);
+                drawHand(secAng, faceRadius * 0.85, radius * 0.02, 'red');
+                
+                ctx.restore();
+            };
+
+            const drawHand = (angle, length, width, color) => {
+                ctx.beginPath();
+                ctx.lineWidth = width;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = color;
+                ctx.moveTo(0, 0);
+                ctx.rotate(angle);
+                ctx.lineTo(0, -length);
+                ctx.stroke();
+                ctx.rotate(-angle);
+            };
+            
+            // --- 타이머 로직 ---
+
+            // 메인 타이머 루프
+            const timerLoop = () => {
+                if (timerStatus !== 'running') return;
+                
+                simulationTime.setSeconds(simulationTime.getSeconds() + 1);
+                
+                updateUI();
+                checkAllEvents();
+            };
+
+            // UI 업데이트
+            const updateUI = () => {
+                drawClock(simulationTime);
+                digitalClock.textContent = formatTime(simulationTime);
+                
+                // 남은 시간 계산
+                if (currentSubject && timerStatus !== 'stopped') {
+                    const endTime = timeToDate(currentSubject.end);
+                    const remainingSeconds = Math.round((endTime.getTime() - simulationTime.getTime()) / 1000);
+                    timeRemainingEl.textContent = formatDuration(remainingSeconds);
+                    if (remainingSeconds < 0) {
+                         timeRemainingEl.textContent = "00:00:00";
+                    }
+                } else {
+                    timeRemainingEl.textContent = "00:00:00";
+                }
+            };
+
+            // 이벤트 체크
+            const checkAllEvents = () => {
+                if (!currentSubject) return;
+
+                const now = simulationTime;
+                
+                // 이벤트 시간 계산
+                const startTime = timeToDate(currentSubject.start);
+                const endTime = timeToDate(currentSubject.end);
+                const pre12Time = new Date(startTime.getTime() - 12 * 60000);
+                const pre15Time = new Date(startTime.getTime() - 15 * 60000); // 국어
+                const pre10Time = new Date(startTime.getTime() - 10 * 60000);
+                const pre5Time = new Date(startTime.getTime() - 5 * 60000);
+                const pre3Time = new Date(startTime.getTime() - 3 * 60000); // 영어 듣기
+                const end10Time = new Date(endTime.getTime() - 10 * 60000);
+                const end5Time = new Date(endTime.getTime() - 5 * 60000);
+                const post3Time = new Date(endTime.getTime() + 3 * 60000);
+
+                let eventName = "";
+
+                // --- 이벤트 트리거 ---
+                if (now >= pre12Time) {
+                    eventName = "시험 12분 전 (준비)";
+                    
+                    if (currentSubjectKey === 'korean' && checkEventTrigger('pre_15', pre15Time)) {
+                        eventName = "시험 15분 전 (예비령)";
+                        playEventSound(userConfig.pre_10_music, userConfig.pre_10_tts);
+                    }
+                    
+                    if (currentSubjectKey !== 'korean' && checkEventTrigger('pre_10', pre10Time)) {
+                        eventName = "시험 10분 전 (예비령)";
+                        if (currentSubjectKey === 'english') {
+                            englishConfig.classList.remove('hidden');
+                            speakTTS("듣기평가 음원 파일을 확인하십시오.");
+                        } else {
+                            playEventSound(userConfig.pre_10_music, userConfig.pre_10_tts);
+                        }
+                    }
+
+                    if (checkEventTrigger('pre_5', pre5Time)) {
+                        eventName = "시험 5분 전 (예비령)";
+                        playEventSound(userConfig.pre_5_music, userConfig.pre_5_tts);
+                    }
+
+                    if (currentSubjectKey === 'english' && checkEventTrigger('pre_3_english', pre3Time)) {
+                        eventName = "듣기평가 준비";
+                        startEnglishListeningTest(startTime);
+                    }
+
+                    if (checkEventTrigger('start', startTime)) {
+                        eventName = "시험 시작 (본령)";
+                        if (currentSubjectKey !== 'english') {
+                            playEventSound(userConfig.start_music, userConfig.start_tts);
+                        } else {
+                            eventName = "듣기평가 시작";
+                            eventInfo.textContent = eventName;
+                        }
+                    }
+                }
+                
+                // 시험 진행 중
+                if (now >= startTime && now < endTime) {
+                    eventName = "시험 진행 중";
+
+                    // 종료 알림
+                    const isShortExam = ['history', 'social', 'science'].includes(currentSubjectKey);
+                    
+                    if (!isShortExam && checkEventTrigger('end_10', end10Time)) {
+                        eventName = "시험 종료 10분 전";
+                        playEventSound(userConfig.end_10_music, userConfig.end_10_tts);
+                    }
+                    
+                    if (isShortExam && checkEventTrigger('end_5', end5Time)) {
+                        eventName = "시험 종료 5분 전";
+                        playEventSound(userConfig.end_5_music, userConfig.end_5_tts);
+                    }
+                }
+                
+                // 시험 종료
+                if (checkEventTrigger('end', endTime)) {
+                    eventName = "시험 종료";
+                    playEventSound(userConfig.end_music, userConfig.end_tts);
+                    if (isListeningTestActive) {
+                        stopEnglishListeningTest(); // 시험 종료되면 듣기평가도 강제 종료
+                    }
+                }
+
+                // 3분 후 (다음 과목)
+                if (now >= post3Time) {
+                    eventName = "시험 종료 (정리)";
+                    goToNextSubject();
+                }
+                
+                // 영어 듣기평가 '시간' 종료 체크 (오디오 파일 길이와 무관)
+                if (isListeningTestActive && listeningTestEndTime && now >= listeningTestEndTime) {
+                    // 오디오가 여전히 재생 중이어도, 예정된 시간이 되면 "듣기평가 종료" 멘트
+                    if (!eventsTriggered['listening_end_tts']) {
+                        eventsTriggered['listening_end_tts'] = true;
+                        speakTTS("듣기평가 시간이 종료되었습니다.");
+                        // 참고: 오디오 파일이 끝나야 컨트롤이 활성화됨
+                    }
+                }
+
+                if (eventName) {
+                    eventInfo.textContent = eventName;
+                }
+            };
+
+            // 이벤트가 이미 실행되었는지 확인
+            const checkEventTrigger = (key, time) => {
+                if (!eventsTriggered[key] && simulationTime >= time) {
+                    eventsTriggered[key] = true;
+                    return true;
+                }
+                return false;
+            };
+
+            // --- 영어 듣기평가 로직 ---
+            const startEnglishListeningTest = (startTime) => {
+                if (isListeningTestActive) return;
+
+                const audioFile = englishAudioInput.value;
+                if (!audioFile) {
+                    showMessage("듣기평가 음원 파일 경로를 입력하세요.");
+                    eventsTriggered['pre_3_english'] = false; // 이벤트 재시도
+                    return;
+                }
+                
+                isListeningTestActive = true;
+                // 'scheduled' end time based on exam table
+                const duration = currentSubject.listeningDuration || 25;
+                listeningTestEndTime = new Date(startTime.getTime() + (duration - 3) * 60000); 
+                
+                // UI 업데이트
+                englishListeningOverlay.classList.remove('hidden');
+                englishListeningOverlay.classList.add('flex');
+                englishFileDisplay.textContent = `${audioFile.split('/').pop()} 재생 중`;
+                disableTimeControls(true);
+
+                // 오디오 재생
+                try {
+                    listeningAudio.src = audioFile;
+                    listeningAudio.load();
+                    listeningAudio.play().catch(e => {
+                        console.error('Audio play failed:', e);
+                        showMessage("오디오 재생 실패. 파일 경로를 확인하세요.");
+                        stopEnglishListeningTest(); // 실패 시 컨트롤 잠금 해제
+                    });
+                    
+                    // 오디오 파일이 '자연스럽게' 종료되면 컨트롤 잠금 해제
+                    listeningAudio.onended = () => {
+                        console.log("Listening audio file finished.");
+                        stopEnglishListeningTest(); 
+                        // 이미 멘트가 나갔을 수 있으므로 여기서는 멘트 안 함
+                    };
+
+                } catch (e) {
+                     console.error('Error setting up audio:', e);
+                     showMessage("오디오 설정 중 오류 발생.");
+                     stopEnglishListeningTest();
+                }
+            };
+
+            const stopEnglishListeningTest = () => {
+                if (!isListeningTestActive) return;
+                
+                isListeningTestActive = false;
+                // listeningTestEndTime = null; // null로 만들지 않음 (이벤트 체크용)
+                
+                englishListeningOverlay.classList.add('hidden');
+                englishListeningOverlay.classList.remove('flex');
+                disableTimeControls(false);
+                
+                // 오디오 중지 및 리셋
+                listeningAudio.pause();
+                listeningAudio.currentTime = 0;
+                listeningAudio.onended = null; // 이벤트 리스너 제거
+                
+                console.log(`[${formatTime(simulationTime)}] Listening test controls unlocked.`);
+            };
+
+            const disableTimeControls = (disabled) => {
+                document.querySelectorAll('.time-skip-btn').forEach(btn => btn.disabled = disabled);
+                eventSkipButton.disabled = disabled;
+                pauseButton.disabled = disabled; // 듣기 중엔 일시정지도 불가
+                if(disabled) {
+                    pauseButton.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    pauseButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            };
+
+            // --- 과목 제어 ---
+
+            const loadSubject = (subjectKey) => {
+                currentSubjectKey = subjectKey;
+                currentSubject = EXAM_SCHEDULE[selectedExamType][subjectKey];
+                
+                if (!currentSubject) {
+                    console.error("과목 정보를 찾을 수 없습니다:", subjectKey);
+                    stopTimer();
+                    return;
+                }
+                
+                // 상태 초기화
+                eventsTriggered = {};
+                if (isListeningTestActive) stopEnglishListeningTest();
+
+                // UI 업데이트
+                subjectInfo.textContent = currentSubject.name;
+                englishConfig.classList.toggle('hidden', subjectKey !== 'english');
+                englishListeningOverlay.classList.add('hidden');
+
+                // 타이머 시작 시간 설정 (시험 시작 12분 전)
+                const startTime = timeToDate(currentSubject.start);
+                simulationTime = new Date(startTime.getTime() - 12 * 60000);
+                
+                eventInfo.textContent = "시험 12분 전 (준비)";
+                updateUI();
+            };
+
+            const startTimer = () => {
+                if (timerStatus === 'running') return;
+                
+                timerStatus = 'running';
+                pauseButton.textContent = '일시정지';
+                
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(timerLoop, 1000);
+            };
+
+            const pauseTimer = () => {
+                if (timerStatus !== 'running') return;
+                timerStatus = 'paused';
+                pauseButton.textContent = '다시시작';
+                stopTTS(); // 일시정지 시 멘트 중단
+                if (isListeningTestActive) listeningAudio.pause(); // 듣기평가도 일시정지
+                clearInterval(timerInterval);
+            };
+
+            const resumeTimer = () => {
+                if (timerStatus !== 'paused') return;
+                if (isListeningTestActive) listeningAudio.play(); // 듣기평가 재시작
+                startTimer(); // 상태가 'paused' -> 'running'으로 바뀜
+            };
+
+            const stopTimer = () => {
+                timerStatus = 'stopped';
+                pauseButton.textContent = '일시정지';
+                clearInterval(timerInterval);
+                timerInterval = null;
+                currentSubject = null;
+                if (isListeningTestActive) stopEnglishListeningTest();
+                eventInfo.textContent = "모든 시험 종료";
+                timeRemainingEl.textContent = "00:00:00";
+            };
+
+            const goToNextSubject = () => {
+                stopTTS();
+                if (isListeningTestActive) stopEnglishListeningTest();
+                currentSubjectIndex++;
+                if (currentSubjectIndex < selectedSubjects.length) {
+                    // 다음 과목 로드
+                    loadSubject(selectedSubjects[currentSubjectIndex]);
+                    startTimer(); // 새 과목 타이머 자동 시작
+                } else {
+                    // 모든 과목 종료
+                    stopTimer();
+                    showMessage("모든 시험이 종료되었습니다.");
+                    setTimeout(() => showPage('settings-page'), 2000);
+                }
+            };
+            
+            // --- 페이지/모달 제어 ---
+            const showPage = (pageId) => {
+                if (pageId === 'timer-page') {
+                    settingsPage.classList.add('hidden');
+                    timerPage.classList.remove('hidden');
+                    setupCanvas(); // 타이머 페이지 보일 때 캔버스 크기 설정
+                } else {
+                    timerPage.classList.add('hidden');
+                    settingsPage.classList.remove('hidden');
+                    stopTimer(); // 설정으로 돌아가면 타이머 완전 중지
+                }
+            };
+
+            // --- 이벤트 리스너 ---
+
+            // 시작 버튼
+            startButton.addEventListener('click', () => {
+                selectedExamType = document.querySelector('input[name="examType"]:checked').value;
+                selectedSubjects = Array.from(document.querySelectorAll('.subject-checkbox:checked')).map(cb => cb.value);
+                
+                if (selectedSubjects.length === 0) {
+                    showMessage("하나 이상의 과목을 선택하세요.");
+                    return;
+                }
+                
+                // (경고) 오디오 자동재생 정책으로 인해 첫 클릭 시 소리가 안 날 수 있습니다.
+                // 이 클릭으로 오디오 컨텍스트를 활성화합니다.
+                playSound('none'); // Dummy play to unlock audio context
+
+                currentSubjectIndex = 0;
+                loadSubject(selectedSubjects[currentSubjectIndex]);
+                showPage('timer-page');
+                startTimer();
+            });
+
+            // 뒤로가기 버튼
+            backButton.addEventListener('click', () => {
+                pauseTimer(); // 일단 멈춤
+                if (confirm("타이머를 중지하고 설정 화면으로 돌아가시겠습니까?")) {
+                    showPage('settings-page'); // stopTimer()가 내부에서 호출됨
+                } else {
+                    resumeTimer(); // 취소하면 다시 시작
+                }
+            });
+
+            // 일시정지/재시작 버튼
+            pauseButton.addEventListener('click', () => {
+                if (isListeningTestActive) {
+                    showMessage("듣기평가 중에는 일시정지할 수 없습니다.");
+                    return;
+                }
+                if (timerStatus === 'running') {
+                    pauseTimer();
+                } else if (timerStatus === 'paused') {
+                    resumeTimer();
+                }
+            });
+
+            // 시간 이동 버튼
+            document.querySelectorAll('.time-skip-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    if (isListeningTestActive) {
+                        showMessage("듣기평가 중에는 시간을 이동할 수 없습니다.");
+                        return;
+                    }
+                    const seconds = parseInt(e.target.dataset.skip, 10);
+                    simulationTime.setSeconds(simulationTime.getSeconds() + seconds);
+                    stopTTS(); // 시간 이동 시 멘트 중단
+                    eventsTriggered = {}; // 시간 이동 시 이벤트 리셋
+                    updateUI(); // 즉시 UI 반영
+                });
+            });
+
+            // 다음 종 이동 버튼
+            eventSkipButton.addEventListener('click', () => {
+                if (isListeningTestActive) {
+                    showMessage("듣기평가 중에는 시간을 이동할 수 없습니다.");
+                    return;
+                }
+                if (!currentSubject) return;
+
+                const now = simulationTime;
+                const startTime = timeToDate(currentSubject.start);
+                const endTime = timeToDate(currentSubject.end);
+                
+                const isShortExam = ['history', 'social', 'science'].includes(currentSubjectKey);
+
+                // 이벤트 시간 목록
+                let eventTimes = [
+                    new Date(startTime.getTime() - (currentSubjectKey === 'korean' ? 15 : 10) * 60000), // 예비령 1
+                    new Date(startTime.getTime() - 5 * 60000), // 예비령 2
+                    startTime, // 본령
+                    new Date(endTime.getTime() - (isShortExam ? 5 : 10) * 60000), // 종료 알림
+                    endTime, // 종료령
+                    new Date(endTime.getTime() + 3 * 60000) // 완전 종료
+                ];
+                
+                if (currentSubjectKey === 'english') {
+                    eventTimes.push(new Date(startTime.getTime() - 3 * 60000)); // 듣기 준비
+                    if(listeningTestEndTime) eventTimes.push(listeningTestEndTime); // 듣기 (시간) 종료
+                    eventTimes.sort((a, b) => a - b);
+                }
+
+                // 현재 시간보다 뒤에 있는 다음 이벤트 시간 찾기
+                const nextEventTime = eventTimes.find(t => t > now);
+
+                if (nextEventTime) {
+                    simulationTime = new Date(nextEventTime.getTime() - 1000); // 이벤트 1초 전으로 이동
+                    stopTTS();
+                    eventsTriggered = {};
+                    updateUI();
+                } else {
+                    // 다음 이벤트가 없으면 과목 종료
+                    goToNextSubject();
+                }
+            });
+            
+            // 창 크기 조절 시 캔버스 다시 그리기
+            window.addEventListener('resize', () => {
+                if (timerStatus !== 'stopped') {
+                    setupCanvas();
+                }
+            });
+
+        }); // DOMContentLoaded End
+    </script>
+</body>
+</html>
+
